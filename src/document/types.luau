@@ -12,6 +12,7 @@ export type property = {
 	declaration: syntax.Trivia,
 	name: string,
 	type: string,
+	description: string,
 }
 
 export type method = {
@@ -19,10 +20,11 @@ export type method = {
 	name: string,
 	returns: string,
 	params: { string },
+	description: string,
 }
 
 export type class_declaration = {
-	declaration: syntax.Trivia,
+	declaration: syntax.Trivia?,
 	properties: { [string]: property },
 	methods: { [string]: method },
 	description: string,
