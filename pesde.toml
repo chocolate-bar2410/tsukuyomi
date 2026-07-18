@@ -1,0 +1,12 @@
+name = "chocolate_bar2410/tsukuyomi"
+version = "0.1.0"
+description = "a tool to transform luau doc comments to zensical markdown"
+authors = ["chocolate_bar2410"]
+repository = "https://github.com/chocolate-bar2410/tsukuyomi"
+license = "MIT"
+
+[target]
+environment = "luau"
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
