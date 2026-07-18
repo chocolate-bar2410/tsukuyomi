@@ -75,7 +75,7 @@ schema.consume = function(self: doc_parser, comments: { syntax.Trivia })
 				name = tag.text,
 				declaration = tag.trivia,
 				params = {},
-				returns = "",
+				returns = "()",
 				description = description,
 			}
 
@@ -135,9 +135,17 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 		local source = ([[
 ---
 title: %s
-description: %s
+description: API documentation for %s
 ---
-        ]]):format(name, class.description)
+%s
+# methods
+]]):format(name, name, class.description)
+
+		for method_name, method in class.methods do
+			source ..= `## {method_name}\z
+            \n{name}.{method_name}() -> {method.returns}\z
+            \n{method.description}`
+		end
 
 		result[name] = source
 	end
