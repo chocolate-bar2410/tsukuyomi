@@ -4,8 +4,23 @@ local process = require("@std/process")
 
 local module = {}
 
-local commands: { [string]: { description: string, [number]: string } } = {}
-local options: { [string]: { description: string, alias: string? } } = {}
+type command = {
+	description: string,
+	callback: (arguments: { string }) -> (),
+	[number]: string,
+}
+
+type option = {
+	description: string,
+	alias: string?,
+	callback: (arguments: { string }) -> (),
+}
+
+local commands: { [string]: command } = {}
+local options: { [string]: option } = {}
+
+local error_string = `{ANSI.BRIGHT_RED}error:{ANSI.RESET} %s '{ANSI.BRIGHT_YELLOW}%s{ANSI.RESET}'`
+local internal_error_string = `{ANSI.BRIGHT_RED}internal error:{ANSI.RESET} %s '{ANSI.BRIGHT_YELLOW}%s{ANSI.RESET}'`
 
 module.version = ""
 module.name = ""
@@ -25,25 +40,40 @@ local function isvalidoption(argument: string)
 	return from_alias(argument) ~= nil
 end
 
+local function dispatch_command(command: string, arguments: { string })
+	if commands[command].callback == nil then
+		print(internal_error_string:format("could not find callback for command", command))
+		return
+	end
+
+	commands[command].callback(arguments)
+end
+
+local function dispatch_option(command: string, arguments: { string })
+	local option_string = if options[command] then command else from_alias(command)
+
+	if option_string == nil or options[option_string] == nil then
+		print(internal_error_string:format("could not find callback for command", command))
+		return
+	end
+
+	options[option_string].callback(arguments)
+end
+
 module.parse_args = function(arguments: { string })
-	local command = arguments[1]
+	local command: string = arguments[1]
 
 	if commands[command] == nil and isvalidoption(command) == false then
-		print(
-			`{ANSI.BRIGHT_RED}error:{ANSI.RESET} could not recognise command '{ANSI.BRIGHT_YELLOW}{command}{ANSI.RESET}'`
-		)
+		print(error_string:format("could not find command", command))
 		module.print_help()
 		return
 	end
 
 	if commands[command] then
-		print(command)
-		return
+		dispatch_command(command, table.move(arguments, 2, #arguments, 1, {}))
+	else
+		dispatch_option(command, table.move(arguments, 2, #arguments, 1, {}))
 	end
-
-	if options[command] == nil then command = from_alias(command) end
-
-	print(command)
 
 end
 
@@ -76,18 +106,33 @@ module.print_help = function()
 	print(result)
 end
 
-module.define_command = function(command_name: string, description: string, ...: string)
+module.define_command = function(
+	command_name: string,
+	description: string,
+	callback: (arguments: { string }) -> (),
+	...: string
+)
 	if commands[command_name] then error(`internal error: already defined command {command_name}`) end
 
-	commands[command_name] = { ["description"] = description, ... }
+	commands[command_name] = {
+		["description"] = description,
+		["callback"] = callback,
+		...,
+	}
 end
 
-module.define_option = function(option_name: string, description: string, alias: string?)
+module.define_option = function(
+	option_name: string,
+	description: string,
+	alias: string?,
+	callback: (arguments: { string }) -> ()
+)
 	if options[option_name] then error(`internal error: already defined option {option_name}`) end
 
 	options[option_name] = {
 		["description"] = description,
 		["alias"] = alias,
+		["callback"] = callback,
 	}
 end
 
