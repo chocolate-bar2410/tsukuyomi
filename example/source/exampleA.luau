@@ -2,12 +2,16 @@
 ---@class hello
 local hello = {}
 
--- wildcard
-
---- This does stuff
+---prints the message given to the output box.
 ---@within hello
----@method dostuff
----@return number
-function hello:dostuff()
-	print("hello world")
+---@method print
+function hello:print(message: string)
+	print(message)
+end
+
+---returns the sum of 2 numbers.
+---@within hello
+---@method add
+function hello:add(a: number, b: number): number
+	return a + b
 end
