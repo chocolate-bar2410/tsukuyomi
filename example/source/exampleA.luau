@@ -10,4 +10,6 @@ local hello = {}
 ---@within hello
 ---@method dostuff
 ---This does stuff
-function hello:dostuff() end
+function hello:dostuff()
+	print("hello world")
+end
