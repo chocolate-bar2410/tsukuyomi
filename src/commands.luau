@@ -33,8 +33,11 @@ module.build = function(arguments: { string })
 	assert(file_util.is_folder(output_path) == true, `expected folder got {fs.type(output_path)}`)
 	assert(file_util.is_folder(target_path) == true, `expected folder got {fs.type(target_path)}`)
 
-	document.from_directory(target_path)
+	local documents = document.from_directory(target_path)
 
+	for i, v in documents do
+		print(`[{i}]:\n{v}`)
+	end
 end
 
 return module

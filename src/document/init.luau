@@ -12,7 +12,7 @@ local pretty_print = require("./utility./prettyprint")
 
 local module = {}
 
-module.from_directory = function(target_directory: path.Path): string
+module.from_directory = function(target_directory: path.Path): { [string]: string }
 	local it = fs.walk(target_directory, { recursive = true })
 	local walker = it()
 
@@ -32,7 +32,7 @@ module.from_directory = function(target_directory: path.Path): string
 		walker = it()
 	end
 
-	return ""
+	return parse:generate_markdown()
 end
 
 return module
