@@ -35,7 +35,7 @@ module.extract_doc_comments = function(CST: syntax.ParseResult): { syntax.Trivia
 
 			if _trivia.tag == "comment" and _trivia.text:sub(1, 3) ~= "---" then continue end
 
-			if _trivia.tag == "blockcomment" and _trivia.text:match("^--[=[(.-)]=]$") == nil then continue end
+			if _trivia.tag == "blockcomment" and _trivia.text:match("^%-%-%[=%[(.-)%]=%]$") == nil then continue end
 
 			table.insert(result, _trivia)
 		end
