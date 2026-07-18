@@ -1,15 +1,13 @@
-
---[=[
-    @class hello
-    Class for doing stuff
-]=]
+---Class for doing stuff
+---@class hello
 local hello = {}
 
 -- wildcard
 
+--- This does stuff
 ---@within hello
 ---@method dostuff
----This does stuff
+---@return number
 function hello:dostuff()
 	print("hello world")
 end
