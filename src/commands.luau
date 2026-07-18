@@ -36,7 +36,8 @@ module.build = function(arguments: { string })
 	local documents = document.from_directory(target_path)
 
 	for i, v in documents do
-		print(`[{i}]:\n{v}`)
+		local new_file = fs.open(path.join(output_path, `{i}.md`), "w")
+		fs.write(new_file, v)
 	end
 end
 
