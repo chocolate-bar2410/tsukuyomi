@@ -37,8 +37,21 @@ module.extract_doc_comments = function(CST: syntax.ParseResult): { types.documen
 
 	--[[local new_file = fs.open(path.join(`./testing.json`), "w")
 	fs.write(new_file, pretty_print(CST.root))]]
+	local processed = {}
 
 	local result = syntax_query.findAllFromRoot(CST, function<T>(node: syntax.AstNode): T?
+		if processed[node] == true then return end
+		if node.kind == "stat" and node.tag == "function" then
+			local name_expr = node.name
+			local method_name = ""
+			if name_expr and name_expr.tag == "indexname" then method_name = name_expr.index.text end
+
+			local comments = get_doc_comments(node.func.functionKeyword)
+			if method_name == nil or #comments == 0 then return end
+			processed[node.func.functionKeyword] = true
+
+			return { comments = comments, declaration = node }
+		end
 
 		local comments = get_doc_comments(node)
 		if #comments == 0 then return end
