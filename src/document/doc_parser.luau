@@ -10,14 +10,111 @@ local meta = { __index = schema }
 
 export type doc_parser = setmetatable<{
 	classes: { [string]: types.class_declaration },
-
+	methods: { [string]: types.method },
 }, typeof(meta)>
 
 interface.new = function(): doc_parser
 	local parser = {}
 	parser.classes = {}
+	parser.methods = {}
 
 	return setmetatable(parser, meta)
+end
+
+schema.processTags = function(self: doc_parser, tags: { types.tag })
+	local description = ""
+
+	local current_class: types.class_declaration? = nil
+	local current_method: types.method? = nil
+
+	for i, tag: types.tag in ipairs(tags) do
+		if tag.type == "DESCRIPTION" then
+			description ..= tag.text
+		elseif tag.type == "WITHIN" then
+			if self.classes[tag.text] == nil then
+				self.classes[tag.text] = {
+					declaration = nil,
+					properties = {},
+					methods = {},
+					description = "",
+				}
+			end
+			current_class = self.classes[tag.text]
+
+		elseif tag.type == "CLASS" then
+			if self.classes[tag.text] == nil then
+				self.classes[tag.text] = {
+					declaration = nil,
+					properties = {},
+					methods = {},
+					description = "",
+				}
+			end
+
+			current_class = self.classes[tag.text]
+
+			current_class.declaration = tag.location
+			current_class.description = description
+
+			description = ""
+		elseif tag.type == "METHOD" then
+			if current_class ~= nil then
+				current_class.methods[tag.text] = {
+					name = tag.text,
+					declaration = tag.location,
+					params = {},
+					returns = "()",
+					description = description,
+				}
+				current_method = current_class.methods[tag.text]
+			end
+
+			description = ""
+
+		elseif tag.type == "RETURN" then
+			assert(current_method ~= nil, "error with parsing: ---@return can only be used with method declarations")
+
+			current_method.returns = tag.text
+		elseif tag.type == "PARAM" then
+			assert(current_method ~= nil, "error with parsing: ---@param can only be used with method declarations")
+
+			local param_content = tag.text:split(" ")
+			table.insert(current_method.params, param_content[1] .. " : " .. (param_content[2] or "unknown"))
+		elseif tag.type == "PROP" then
+			assert(
+				current_class ~= nil,
+				"error with parsing: forgot to declare class when defining property, use ---@within <classname> to declare class"
+			)
+
+			local division: number = tag.text:find(" ") :: number
+
+			if division == nil then
+				current_class.properties[tag.text] = {
+					declaration = tag.location,
+					name = tag.text,
+					type = "unknown",
+					description = description,
+				}
+				description = ""
+			end
+
+			local type_start: number = tag.text:find("%S", division) :: number
+
+			local prop_name = tag.text:sub(1, division - 1)
+			local type_def = tag.text:sub(type_start, #tag.text)
+
+			current_class.properties[prop_name] = {
+				declaration = tag.location,
+				name = prop_name,
+				type = type_def,
+				description = description,
+			}
+
+			description = ""
+
+		end
+
+	end
 end
 
 schema.consume = function(self: doc_parser, blocks: { types.document_block })
@@ -53,9 +150,7 @@ schema.consume = function(self: doc_parser, blocks: { types.document_block })
 	table.move(method_tags, 1, #method_tags, #sorted_tags + 1, sorted_tags)
 	table.move(other_tags, 1, #other_tags, #sorted_tags + 1, sorted_tags)
 
-	for i, v in sorted_tags do
-		print(`[{i}]: {v.type} {v.text}`)
-	end
+	self:processTags(sorted_tags)
 end
 
 schema.processDocumentBlock = function(self: doc_parser, block: types.document_block): { types.tag }
@@ -108,6 +203,71 @@ schema.processComment = function(self: doc_parser, comment: syntax.Trivia): type
 		text = text:sub(next_whitespace + 1, #text),
 		location = comment.location,
 	}
+end
+
+local document_preset = [[
+---
+title: %s
+description: API documentation for %s
+---
+%s
+# properties
+%s
+# methods
+%s
+]]
+
+local method_preset = [[## %s
+%s.%s(%s) -> %s  
+%s
+]]
+
+local property_preset = [[## %s
+%s.%s : %s  
+%s
+]]
+
+schema.generate_markdown = function(self: doc_parser): { [string]: string }
+	local result: { [string]: string } = {}
+
+	for class_name, class in self.classes do
+		local methods_string = ""
+		for method_name, method in class.methods do
+			local parameters = table.concat(method.params, ", ")
+
+			methods_string ..= method_preset:format(
+				method_name,
+				class_name,
+				method_name,
+				parameters,
+				method.returns,
+				method.description
+			)
+		end
+
+		local properties_string = ""
+		for property_name, property in class.properties do
+			properties_string ..= property_preset:format(
+				property_name,
+				class_name,
+				property_name,
+				property.type,
+				property.description
+			)
+		end
+
+		local source = (document_preset):format(
+			class_name,
+			class_name,
+			class.description,
+			properties_string,
+			methods_string
+		)
+
+		result[class_name] = source
+	end
+
+	return result
 end
 
 return interface

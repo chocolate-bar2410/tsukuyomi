@@ -1,5 +1,5 @@
 local syntax = require("@std/syntax")
-export type tag_type = "CLASS" | "WITHIN" | "METHOD" | "PARAM" | "RETURN" | "DESCRIPTION"
+export type tag_type = "CLASS" | "WITHIN" | "METHOD" | "PARAM" | "RETURN" | "PROP" | "DESCRIPTION"
 
 export type tag = {
 	type: tag_type,
@@ -23,7 +23,7 @@ export type method = {
 }
 
 export type class_declaration = {
-	declaration: syntax.Span,
+	declaration: syntax.Span?,
 	properties: { [string]: property },
 	methods: { [string]: method },
 	description: string,
