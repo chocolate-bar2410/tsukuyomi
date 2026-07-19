@@ -2,7 +2,7 @@
 local syntax = require("@std/syntax")
 local pretty_print = require("../utility/prettyprint")
 
-local types = require("./types")
+local types = require("../types")
 
 local interface = {}
 local schema = {}
@@ -20,102 +20,84 @@ interface.new = function(): doc_parser
 	return setmetatable(parser, meta)
 end
 
-schema.consume = function(self: doc_parser, comments: { syntax.Trivia })
-
+schema.consume = function(self: doc_parser, blocks: { types.document_block })
 	local tags: { types.tag } = {}
-	for i, v in comments do
-		if v.tag == "comment" then table.insert(tags, self:process_comment(v)) end
-		--if v.tag == "blockcomment" then print("block comments not implemented yet") end
+	for i, v in blocks do
+		local extracted = self:processDocumentBlock(v)
+
+		table.move(extracted, 1, #extracted, #tags + 1, tags)
 	end
 
-	--pretty_print(tags :: { unknown })
+	local sorted_tags: { types.tag } = {}
 
-	local description = ""
+	local method_tags: { types.tag } = {}
+	local other_tags: { types.tag } = {}
 
-	local current_class: types.class_declaration? = nil
-	local current_method: types.method? = nil
+	for i, tag in ipairs(tags) do
+		if tag.type == "WITHIN" then
+			table.move(method_tags, 1, #method_tags, #sorted_tags + 1, sorted_tags)
+			table.move(other_tags, 1, #other_tags, #sorted_tags + 1, sorted_tags)
 
-	for i, tag: types.tag in ipairs(tags) do
-		if tag.type == "DESCRIPTION" then
-			description ..= tag.text
-		elseif tag.type == "WITHIN" then
-			if self.classes[tag.text] == nil then
-				self.classes[tag.text] = {
-					declaration = nil,
-					properties = {},
-					methods = {},
-					description = "",
-				}
-			end
-			current_class = self.classes[tag.text]
+			table.clear(method_tags)
+			table.clear(other_tags)
 
-		elseif tag.type == "CLASS" then
-			if self.classes[tag.text] == nil then
-				self.classes[tag.text] = {
-					declaration = nil,
-					properties = {},
-					methods = {},
-					description = "",
-				}
-			end
+			table.insert(sorted_tags, tag)
 
-			current_class = self.classes[tag.text]
-
-			current_class.declaration = tag.trivia
-			current_class.description = description
-
-			description = ""
 		elseif tag.type == "METHOD" then
-			assert(
-				current_class ~= nil,
-				"error with parsing: forgot to declare class when defining method, use ---@within <classname> to declare class"
-			)
-
-			current_class.methods[tag.text] = {
-				name = tag.text,
-				declaration = tag.trivia,
-				params = {},
-				returns = "()",
-				description = description,
-			}
-
-			description = ""
-
-			current_method = current_class.methods[tag.text]
+			table.insert(method_tags, tag)
+		else
+			table.insert(other_tags, tag)
 		end
-
 	end
 
+	table.move(method_tags, 1, #method_tags, #sorted_tags + 1, sorted_tags)
+	table.move(other_tags, 1, #other_tags, #sorted_tags + 1, sorted_tags)
+
+	for i, v in sorted_tags do
+		print(`[{i}]: {v.type} {v.text}`)
+	end
 end
 
-schema.process_block_comment = function(self: doc_parser, comment: syntax.Trivia)
-	local text = comment.text:match("^%-%-%[=%[(.-)%]=%]$")
+schema.processDocumentBlock = function(self: doc_parser, block: types.document_block): { types.tag }
+	local tags = {}
 
-	print(text)
+	for i, comment in block.comments do
+		local new_tag = self:processComment(comment)
+
+		table.insert(tags, new_tag)
+	end
+
+	local declaration: syntax.AstStatFunction = block.declaration :: syntax.AstStatFunction
+	if declaration.name then
+		local name_expression = declaration.name
+
+		if name_expression and name_expression.kind == "expr" and name_expression.tag == "indexname" then
+			table.insert(tags, {
+				type = "METHOD" :: types.tag_type,
+				text = name_expression.index.text,
+				location = declaration.func.functionKeyword.location,
+			})
+		end
+	end
+
+	return tags
 end
 
-schema.process_comment = function(self: doc_parser, comment: syntax.Trivia): types.tag
+schema.processComment = function(self: doc_parser, comment: syntax.Trivia): types.tag
 	local text = comment.text
 
-	local is_tag = false
-	local tag_pos = 0
+	local is_tag = text:match("@") ~= nil and text:sub(1, 3) == "---"
+	local tag_pos: number = text:find("@") :: number
 
-	for i = 1, #text do
-		local char = text:sub(i, i)
-		if char == "-" then continue end
-		if char:match("%s") then continue end
+	if tag_pos ~= nil and text:sub(4, tag_pos - 1):match("%S+") ~= nil then is_tag = false end
 
-		if char ~= "@" then break end
-
-		is_tag = true
-		tag_pos = i
+	if is_tag == false then
+		return {
+			type = "DESCRIPTION",
+			text = text:sub(4, #text),
+			location = comment.location,
+		}
 	end
-
-	if is_tag == false then return {
-		type = "DESCRIPTION",
-		text = text:sub(4, #text),
-		trivia = comment,
-	} end
 
 	local next_whitespace: number = text:find("%s", tag_pos) :: number
 
@@ -124,33 +106,8 @@ schema.process_comment = function(self: doc_parser, comment: syntax.Trivia): typ
 	return {
 		type = tag_type,
 		text = text:sub(next_whitespace + 1, #text),
-		trivia = comment,
+		location = comment.location,
 	}
-end
-
-schema.generate_markdown = function(self: doc_parser): { [string]: string }
-	local result: { [string]: string } = {}
-
-	for name, class in self.classes do
-		local source = ([[
----
-title: %s
-description: API documentation for %s
----
-%s
-# methods
-]]):format(name, name, class.description)
-
-		for method_name, method in class.methods do
-			source ..= `## {method_name}\z
-            \n{name}.{method_name}() -> {method.returns}\z
-            \n{method.description}`
-		end
-
-		result[name] = source
-	end
-
-	return result
 end
 
 return interface
