@@ -1,5 +1,4 @@
 --!strict
-local syntax = require("@std/syntax")
 local path = require("@std/path")
 local fs = require("@std/fs")
 
@@ -7,8 +6,6 @@ local syntax_util = require("./utility/syntax")
 local file_util = require("./utility/file")
 
 local doc_parser = require("@self/doc_parser")
-
-local pretty_print = require("./utility./prettyprint")
 
 local module = {}
 

@@ -4,9 +4,6 @@ local syntax = require("@std/syntax")
 local syntax_query = require("@std/syntax/query")
 local types = require("../types")
 
-local tableext = require("@std/tableext")
-local pretty_print = require("./prettyprint")
-
 local module = {}
 
 local get_doc_comments = function(token: syntax.Token): {}
