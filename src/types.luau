@@ -1,6 +1,5 @@
 local syntax = require("@std/syntax")
-
-export type tag_type = "CLASS" | "METHOD" | "WITHIN" | "DESCRIPTION"
+export type tag_type = "CLASS" | "WITHIN" | "METHOD" | "PARAM" | "RETURN" | "DESCRIPTION"
 
 export type tag = {
 	type: tag_type,
@@ -28,6 +27,11 @@ export type class_declaration = {
 	properties: { [string]: property },
 	methods: { [string]: method },
 	description: string,
+}
+
+export type document_block = {
+	comments: { syntax.Trivia },
+	declaration: syntax.AstNode?,
 }
 
 return nil
