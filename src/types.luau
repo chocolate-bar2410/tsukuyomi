@@ -4,18 +4,18 @@ export type tag_type = "CLASS" | "WITHIN" | "METHOD" | "PARAM" | "RETURN" | "DES
 export type tag = {
 	type: tag_type,
 	text: string,
-	trivia: syntax.Trivia,
+	location: syntax.Span,
 }
 
 export type property = {
-	declaration: syntax.Trivia,
+	declaration: syntax.Span,
 	name: string,
 	type: string,
 	description: string,
 }
 
 export type method = {
-	declaration: syntax.Trivia,
+	declaration: syntax.Span,
 	name: string,
 	returns: string,
 	params: { string },
@@ -23,7 +23,7 @@ export type method = {
 }
 
 export type class_declaration = {
-	declaration: syntax.Trivia?,
+	declaration: syntax.Span,
 	properties: { [string]: property },
 	methods: { [string]: method },
 	description: string,
