@@ -31,15 +31,16 @@ templates.method_preset = function(
 	class_name: string,
 	parameters: string,
 	type_def: string,
-	description: string
-)
+	description: string,
+    accessor: string
+)   
 	return `\z
     <h3 markdown>\n\z
     {method_name} \n\z
     <span class = "tsukuyomi-api-type"> -> () </span> \n\z 
     </h3>\n\z
     \`\`\`luau\n\z
-    {class_name}.{method_name}(\n\z
+    {class_name}{accessor}{method_name}(\n\z
         \t{parameters}\n\z
     ): {type_def}\n\z
     \`\`\`\n\z
@@ -49,14 +50,15 @@ templates.method_preset = function(
 end
 
 templates.property_preset = function(
-	method_name: string,
+	property_name: string,
 	class_name: string,
 	type_def: string,
 	description: string
 )
+
 	return `\z
     <h3> \n\z
-    {method_name}\n\z
+    {property_name}\n\z
     <span class = "tsukuyomi-api-type"> : {type_def} </span> \n\z 
     </h3> \n\z
     {description} \n\z

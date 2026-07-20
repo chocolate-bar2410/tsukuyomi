@@ -66,6 +66,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					params = {},
 					returns = "()",
 					description = description,
+					accessor = ".",
 				}
 				current_method = current_class.methods[tag.text]
 			end
@@ -80,6 +81,11 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 			assert(current_method ~= nil, "error with parsing: ---@param can only be used with method declarations")
 
 			local param_name: string?, param_type: string? = tag.text:match("(%S+)%s*(.*)")
+
+			if param_name == "self" then
+				current_method.accessor = ":"
+				continue
+			end
 
 			table.insert(
 				current_method.params,
@@ -237,7 +243,8 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 				class_name,
 				parameters,
 				method.returns,
-				method.description
+				method.description,
+				method.accessor
 			)
 		end
 
