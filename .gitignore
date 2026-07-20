@@ -1,2 +1,9 @@
 sandbox/
 *.exe
+
+# testing with zensical
+zensical.toml
+.cache
+.github
+.venv
+site/
