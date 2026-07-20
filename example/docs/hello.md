@@ -5,30 +5,34 @@ icon: octicons/note-16
 <span class="tsukuyomi-api-icon" markdown>:octicons-note-24:</span> 
 <span class="tsukuyomi-api-name">hello</span> 
 </h1> 
+
 Class for doing stuff 
 ---
 ## properties 
 <h3> 
 PI
-<span class = "tsukyyomi-api-type"> : number </span> 
+<span class = "tsukuyomi-api-type"> : number </span> 
 </h3> 
+
 The ratio between a circle's circumference and its diameter. 
+ 
  
 ---
 ## methods 
 <h3 markdown>
 echo 
-<span class = "tsukyyomi-api-type"> -> () </span> 
+<span class = "tsukuyomi-api-type"> -> () </span> 
 </h3>
 ```luau
 hello.echo(
 	message : string
 ): ()
 ```
+
 prints the message given to the output box.  
 <h3 markdown>
 add 
-<span class = "tsukyyomi-api-type"> -> () </span> 
+<span class = "tsukuyomi-api-type"> -> () </span> 
 </h3>
 ```luau
 hello.add(
@@ -36,5 +40,7 @@ hello.add(
 	b : number
 ): number
 ```
+
 returns the sum of 2 numbers.  
+ 
  
