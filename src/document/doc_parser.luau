@@ -1,6 +1,6 @@
 --!strict
 local syntax = require("@std/syntax")
-
+local stringext = require("@std/stringext")
 local types = require("../types")
 
 local templates = require("./doc_templates")
@@ -30,7 +30,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 
 	for i, tag: types.tag in ipairs(tags) do
 		if tag.type == "DESCRIPTION" then
-			description ..= tag.text
+			description ..= "\n" .. stringext.trim(tag.text)
 		elseif tag.type == "WITHIN" then
 			if self.classes[tag.text] == nil then
 				self.classes[tag.text] = {
@@ -79,17 +79,21 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 		elseif tag.type == "PARAM" then
 			assert(current_method ~= nil, "error with parsing: ---@param can only be used with method declarations")
 
-			local param_content = tag.text:split(" ")
-			table.insert(current_method.params, param_content[1] .. " : " .. (param_content[2] or "unknown"))
+			local param_name: string, param_type: string = tag.text:match("(%S+)%s*(.*)")
+
+			table.insert(
+				current_method.params,
+				param_name .. " : " .. (if param_type == "" then "unknown" else param_type)
+			)
 		elseif tag.type == "PROP" then
 			assert(
 				current_class ~= nil,
 				"error with parsing: forgot to declare class when defining property, use ---@within <classname> to declare class"
 			)
 
-			local division: number = tag.text:find(" ") :: number
+			local prop_name: string, type_def: string = tag.text:match("(%S+)%s*(.*)")
 
-			if division == nil then
+			if type_def == "" then
 				current_class.properties[tag.text] = {
 					declaration = tag.location,
 					name = tag.text,
@@ -97,12 +101,8 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					description = description,
 				}
 				description = ""
+				continue
 			end
-
-			local type_start: number = tag.text:find("%S", division) :: number
-
-			local prop_name = tag.text:sub(1, division - 1)
-			local type_def = tag.text:sub(type_start, #tag.text)
 
 			current_class.properties[prop_name] = {
 				declaration = tag.location,
@@ -185,7 +185,7 @@ schema.processComment = function(self: doc_parser, comment: syntax.Trivia): type
 	local is_tag = text:match("@") ~= nil and text:sub(1, 3) == "---"
 	local tag_pos: number = text:find("@") :: number
 
-	if tag_pos ~= nil and text:sub(4, tag_pos - 1):match("%S+") ~= nil then is_tag = false end
+	if tag_pos == nil or text:sub(4, tag_pos - 1):match("%S+") ~= nil then is_tag = false end
 
 	if is_tag == false then
 		return {
@@ -210,12 +210,30 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 	local result: { [string]: string } = {}
 
 	for class_name, class in self.classes do
+		local methods: { types.method } = {}
+		local properties: { types.property } = {}
+		for i, v in class.methods do
+			table.insert(methods, v)
+		end
+
+		for i, v in class.properties do
+			table.insert(properties, v)
+		end
+
+		table.sort(methods, function(a: types.method, b: types.method): boolean
+			return a.declaration.beginLine < b.declaration.beginLine
+		end)
+
+		table.sort(properties, function(a: types.property, b: types.property): boolean
+			return a.declaration.beginLine < b.declaration.beginLine
+		end)
+
 		local methods_string = ""
-		for method_name, method in class.methods do
-			local parameters = table.concat(method.params, ",\n")
+		for _, method in ipairs(methods) do
+			local parameters = table.concat(method.params, ",\n\t")
 
 			methods_string ..= templates.method_preset(
-				method_name,
+				method.name,
 				class_name,
 				parameters,
 				method.returns,
@@ -224,9 +242,9 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 		end
 
 		local properties_string = ""
-		for property_name, property in class.properties do
+		for _, property in ipairs(properties) do
 			properties_string ..= templates.property_preset(
-				property_name,
+				property.name,
 				class_name,
 				property.type,
 				property.description
