@@ -1,8 +1,9 @@
 --!strict
 local syntax = require("@std/syntax")
-local pretty_print = require("../utility/prettyprint")
 
 local types = require("../types")
+
+local templates = require("./doc_templates")
 
 local interface = {}
 local schema = {}
@@ -205,40 +206,17 @@ schema.processComment = function(self: doc_parser, comment: syntax.Trivia): type
 	}
 end
 
-local document_preset = [[
----
-title: %s
-description: API documentation for %s
----
-%s
-# properties
-%s
-# methods
-%s
-]]
-
-local method_preset = [[## %s
-%s.%s(%s) -> %s  
-%s
-]]
-
-local property_preset = [[## %s
-%s.%s : %s  
-%s
-]]
-
 schema.generate_markdown = function(self: doc_parser): { [string]: string }
 	local result: { [string]: string } = {}
 
 	for class_name, class in self.classes do
 		local methods_string = ""
 		for method_name, method in class.methods do
-			local parameters = table.concat(method.params, ", ")
+			local parameters = table.concat(method.params, ",\n")
 
-			methods_string ..= method_preset:format(
+			methods_string ..= templates.method_preset(
 				method_name,
 				class_name,
-				method_name,
 				parameters,
 				method.returns,
 				method.description
@@ -247,22 +225,15 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 
 		local properties_string = ""
 		for property_name, property in class.properties do
-			properties_string ..= property_preset:format(
+			properties_string ..= templates.property_preset(
 				property_name,
 				class_name,
-				property_name,
 				property.type,
 				property.description
 			)
 		end
 
-		local source = (document_preset):format(
-			class_name,
-			class_name,
-			class.description,
-			properties_string,
-			methods_string
-		)
+		local source = templates.class_preset(class_name, class.description, properties_string, methods_string)
 
 		result[class_name] = source
 	end
