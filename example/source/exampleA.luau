@@ -7,6 +7,7 @@ hello.PI = 3.1459
 
 ---prints the message given to the output box.
 ---@within hello
+---@param self hello
 ---@param message string
 function hello:echo(message: string)
 	print(message)
@@ -14,6 +15,7 @@ end
 
 ---returns the sum of 2 numbers.
 ---@within hello
+---@param self hello
 ---@param a number
 ---@param b number
 ---@return number

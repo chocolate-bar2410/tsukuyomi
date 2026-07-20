@@ -24,7 +24,7 @@ echo
 <span class = "tsukuyomi-api-type"> -> () </span> 
 </h3>
 ```luau
-hello.echo(
+hello:echo(
 	message : string
 ): ()
 ```
@@ -35,7 +35,7 @@ add
 <span class = "tsukuyomi-api-type"> -> () </span> 
 </h3>
 ```luau
-hello.add(
+hello:add(
 	a : number,
 	b : number
 ): number
