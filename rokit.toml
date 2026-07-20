@@ -6,3 +6,4 @@
 [tools]
 lute = "luau-lang/lute@1.0.0"
 StyLua = "JohnnyMorganz/StyLua@2.5.2"
+tsukuyomi = "chocolate-bar2410/tsukuyomi@0.1.0-beta"
