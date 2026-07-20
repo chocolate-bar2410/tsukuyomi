@@ -20,6 +20,7 @@ export type method = {
 	returns: string,
 	params: { string },
 	description: string,
+	accessor: ":" | ".",
 }
 
 export type class_declaration = {
