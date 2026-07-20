@@ -4,6 +4,14 @@ The goal of this tool is to improve usability for luau developers when creating 
 
 This is a pre v1.0 tool so expect more features to be added.
 
+## installation:
+Its reccomended to instal tsukuyomi using [rokit](https://github.com/rojo-rbx/rokit).
+
+To install run this command:
+```pwsh
+rokit add chocolate-bar2410/tsukuyomi
+```
+
 ## Commands:
 - build (TARGET_DIRECTORY) (OUTPUT_DIRECTORY)
     - converts luau files from inside TARGET_DIRECTORY into markdown and inserts them into OUTPUT_DIRECTORY
