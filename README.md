@@ -1,5 +1,8 @@
 # tsukuyomi
 Tsukuyomi is a CLI tool that converts luau doc comments into mkdocs/zensical markdown files.
+The goal of this tool is to improve usability for luau developers when creating documentation using zensical.
+
+This is a pre v1.0 tool so expect more features to be added.
 
 ## Commands:
 - build (TARGET_DIRECTORY) (OUTPUT_DIRECTORY)
@@ -16,4 +19,6 @@ Tsukuyomi is a CLI tool that converts luau doc comments into mkdocs/zensical mar
 - @return
 - @prop
 
-note: this is not moonwave, this is intended to be used along side zensical/mkdocs as a utility for generating docs.
+see [moonwave](https://eryn.io/moonwave/docs/TagList) for more info.
+
+note: this is not moonwave, this is intended to be used along side zensical/material for mkdocs as a utility for generating docs.
