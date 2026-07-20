@@ -79,11 +79,11 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 		elseif tag.type == "PARAM" then
 			assert(current_method ~= nil, "error with parsing: ---@param can only be used with method declarations")
 
-			local param_name: string, param_type: string = tag.text:match("(%S+)%s*(.*)")
+			local param_name: string?, param_type: string? = tag.text:match("(%S+)%s*(.*)")
 
 			table.insert(
 				current_method.params,
-				param_name .. " : " .. (if param_type == "" then "unknown" else param_type)
+				param_name :: string .. " : " .. (if param_type == "" then "unknown" else param_type) :: string
 			)
 		elseif tag.type == "PROP" then
 			assert(
@@ -91,7 +91,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 				"error with parsing: forgot to declare class when defining property, use ---@within <classname> to declare class"
 			)
 
-			local prop_name: string, type_def: string = tag.text:match("(%S+)%s*(.*)")
+			local prop_name: string?, type_def: string? = tag.text:match("(%S+)%s*(.*)")
 
 			if type_def == "" then
 				current_class.properties[tag.text] = {
@@ -104,10 +104,10 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 				continue
 			end
 
-			current_class.properties[prop_name] = {
+			current_class.properties[prop_name :: string] = {
 				declaration = tag.location,
-				name = prop_name,
-				type = type_def,
+				name = prop_name :: string,
+				type = type_def :: string,
 				description = description,
 			}
 
