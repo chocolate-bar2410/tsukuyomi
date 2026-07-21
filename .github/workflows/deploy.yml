@@ -1,0 +1,77 @@
+name: Deployment
+
+on:
+ push:
+    tags:
+       - "v*.*.*"
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+            - os: ubuntu-latest
+              artifact: "tsukuyomi-${{github.ref_name}}-linux"
+              archive: "tsukuyomi-${{github.ref_name}}-linux.tar.gz"
+            - os: macos-latest
+              artifact: "tsukuyomi-${{github.ref_name}}-macos"
+              archive: "tsukuyomi-${{github.ref_name}}-macos.zip"
+            - os: windows-latest
+              artifact: "tsukuyomi-${{github.ref_name}}-windows.exe"
+              archive: "tsukuyomi-${{github.ref_name}}-windows.zip"
+
+    runs-on: ${{matrix.os}}
+    permissions:
+      contents: write
+        
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+
+      - name: setup rokit
+        uses: ThatTimothy/setup-rokit@v1
+
+      - name: compiling binary
+        run: lute compile src/init.luau --output ${{matrix.artifact}}
+
+      - name: zip windows
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path ${{matrix.artifact}} -DestinationPath ${{matrix.archive}}
+
+      - name: zip macos
+        if: runner.os == 'macOS'
+        run: zip ${{matrix.archive}} ${{matrix.artifact}}
+
+      - name: zip linux
+        if: runner.os == 'Linux'
+        run: tar -czvf ${{matrix.archive}} ${{matrix.artifact}}
+
+      - name: uploading artifact
+        uses: "actions/upload-artifact@v7"
+        with:
+          name: ${{matrix.archive}}
+          path: ${{matrix.archive}}
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+
+    - name: download artifacts
+      uses: "actions/download-artifact@v8"
+      with:
+        path: release-assets
+        merge-multiple: true
+
+    - name: releasing to github
+      env:
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      run: |
+          gh release create ${{github.ref_name}} \
+            release-assets/* \
+            --title "${{github.ref_name}}" \
