@@ -7,7 +7,9 @@ icon: octicons/note-16
 </h1> 
 
 Class for doing stuff 
+
 ---
+
 ## properties 
 <h3> 
 PI
@@ -16,9 +18,30 @@ PI
 
 The ratio between a circle's circumference and its diameter. 
  
- 
+
 ---
+
 ## methods 
+<h3 markdown>
+testing123 
+<span class = "tsukuyomi-api-type"> -> () </span> 
+</h3>
+```luau
+hello.testing123(
+	
+): ()
+```
+  
+<h3 markdown>
+factorial 
+<span class = "tsukuyomi-api-type"> -> () </span> 
+</h3>
+```luau
+hello.factorial(
+	x : number
+): result
+```
+  
 <h3 markdown>
 echo 
 <span class = "tsukuyomi-api-type"> -> () </span> 
@@ -42,5 +65,4 @@ hello:add(
 ```
 
 returns the sum of 2 numbers.  
- 
  
