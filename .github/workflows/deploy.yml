@@ -37,6 +37,7 @@ jobs:
         run: rokit install
 
       - name: compiling binary
+        shell: bash
         run: lute compile src/init.luau --output ${{matrix.artifact}}
 
       - name: zip windows
