@@ -12,6 +12,7 @@ export type property = {
 	name: string,
 	type: string,
 	description: string,
+	fileNumber: number,
 }
 
 export type method = {
@@ -21,6 +22,7 @@ export type method = {
 	params: { string },
 	description: string,
 	accessor: ":" | ".",
+	fileNumber: number,
 }
 
 export type class_declaration = {
@@ -28,6 +30,7 @@ export type class_declaration = {
 	properties: { [string]: property },
 	methods: { [string]: method },
 	description: string,
+	fileCount: number,
 }
 
 export type document_block = {
