@@ -30,6 +30,8 @@ jobs:
 
       - name: setup rokit
         uses: ThatTimothy/setup-rokit@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: compiling binary
         run: lute compile src/init.luau --output ${{matrix.artifact}}
