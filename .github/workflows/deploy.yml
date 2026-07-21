@@ -16,9 +16,6 @@ jobs:
             - os: macos-latest
               artifact: "tsukuyomi-${{github.ref_name}}-macos"
               archive: "tsukuyomi-${{github.ref_name}}-macos.zip"
-            - os: windows-latest
-              artifact: "tsukuyomi-${{github.ref_name}}-windows.exe"
-              archive: "tsukuyomi-${{github.ref_name}}-windows.zip"
 
     runs-on: ${{matrix.os}}
     permissions:
@@ -37,12 +34,7 @@ jobs:
         run: rokit install --no-trust-check
 
       - name: compiling binary
-        shell: bash
         run: lute compile src/init.luau --output ${{matrix.artifact}}
-
-      - name: zip windows
-        if: runner.os == 'Windows'
-        run: Compress-Archive -Path ${{matrix.artifact}} -DestinationPath ${{matrix.archive}}
 
       - name: zip macos
         if: runner.os == 'macOS'
