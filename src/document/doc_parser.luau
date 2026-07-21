@@ -30,7 +30,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 
 	for i, tag: types.tag in ipairs(tags) do
 		if tag.type == "DESCRIPTION" then
-			description ..= "\n" .. stringext.trim(tag.text)
+			description ..= "\n" .. tag.text
 		elseif tag.type == "WITHIN" then
 			if self.classes[tag.text] == nil then
 				self.classes[tag.text] = {
@@ -216,26 +216,18 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 	local result: { [string]: string } = {}
 
 	for class_name, class in self.classes do
-		local methods: { types.method } = {}
 		local properties: { types.property } = {}
-		for i, v in class.methods do
-			table.insert(methods, v)
-		end
 
 		for i, v in class.properties do
 			table.insert(properties, v)
 		end
-
-		table.sort(methods, function(a: types.method, b: types.method): boolean
-			return a.declaration.beginLine < b.declaration.beginLine
-		end)
 
 		table.sort(properties, function(a: types.property, b: types.property): boolean
 			return a.declaration.beginLine < b.declaration.beginLine
 		end)
 
 		local methods_string = ""
-		for _, method in ipairs(methods) do
+		for _, method in class.methods do
 			local parameters = table.concat(method.params, ",\n\t")
 
 			methods_string ..= templates.method_preset(
