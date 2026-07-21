@@ -32,10 +32,9 @@ jobs:
         uses: ThatTimothy/setup-rokit@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-    
-      - name: add rokit to PATH (windows)
-        if: runner.os == 'Windows'
-        run: echo "$env:USERPROFILE\.rokit\bin" >> $env:GITHUB_PATH
+
+      - name: install tools
+        run: rokit install
 
       - name: compiling binary
         run: lute compile src/init.luau --output ${{matrix.artifact}}
@@ -80,4 +79,4 @@ jobs:
       run: |
           gh release create ${{github.ref_name}} \
             release-assets/* \
-            --title "${{github.ref_name}}" \
+            --title "${{github.ref_name}}"
