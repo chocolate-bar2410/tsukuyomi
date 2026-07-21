@@ -2,15 +2,13 @@
 local templates = {}
 
 templates.class_preset = function(title: string, description: string, properties_string: string, methods_string: string)
-    local methods_substring = if #methods_string > 0 then `---\n\z
+    local methods_substring = if #methods_string > 0 then `\n---\n\n\z
     ## methods \n\z
-    {methods_string} \n\z
-    ` else ""
+    {methods_string}` else "\n"
 
-    local properties_substring = if #properties_string > 0 then `---\n\z
+    local properties_substring = if #properties_string > 0 then `\n---\n\n\z
     ## properties \n\z
-    {properties_string} \n\z
-    ` else ""
+    {properties_string}` else "\n"
 
 	return `\z
     ---\n\z
@@ -34,15 +32,18 @@ templates.method_preset = function(
 	description: string,
     accessor: string
 )   
+    local param_def = if parameters ~= "" then `(\n\z
+        \t{parameters}\n\z
+    ): {type_def}\n\z` else `(): {type_def}\n`
+
+
 	return `\z
     <h3 markdown>\n\z
     {method_name} \n\z
     <span class = "tsukuyomi-api-type"> -> () </span> \n\z 
     </h3>\n\z
     \`\`\`luau\n\z
-    {class_name}{accessor}{method_name}(\n\z
-        \t{parameters}\n\z
-    ): {type_def}\n\z
+    {class_name}{accessor}{method_name}{param_def}\z
     \`\`\`\n\z
 
     {description}  \n\z
