@@ -1,6 +1,5 @@
 --!strict
 local syntax = require("@std/syntax")
-local stringext = require("@std/stringext")
 local types = require("../types")
 
 local templates = require("./doc_templates")
@@ -38,6 +37,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					properties = {},
 					methods = {},
 					description = "",
+					fileCount = 1,
 				}
 			end
 			current_class = self.classes[tag.text]
@@ -49,6 +49,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					properties = {},
 					methods = {},
 					description = "",
+					fileCount = 1,
 				}
 			end
 
@@ -67,6 +68,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					returns = "()",
 					description = description,
 					accessor = ".",
+					fileNumber = current_class.fileCount,
 				}
 				current_method = current_class.methods[tag.text]
 			end
@@ -105,6 +107,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 					name = tag.text,
 					type = "unknown",
 					description = description,
+					fileNumber = current_class.fileCount,
 				}
 				description = ""
 				continue
@@ -115,6 +118,7 @@ schema.processTags = function(self: doc_parser, tags: { types.tag })
 				name = prop_name :: string,
 				type = type_def :: string,
 				description = description,
+				fileNumber = current_class.fileCount,
 			}
 
 			description = ""
@@ -156,6 +160,10 @@ schema.consume = function(self: doc_parser, blocks: { types.document_block })
 
 	table.move(method_tags, 1, #method_tags, #sorted_tags + 1, sorted_tags)
 	table.move(other_tags, 1, #other_tags, #sorted_tags + 1, sorted_tags)
+
+	for i, v in self.classes do
+		v.fileCount += 1
+	end
 
 	self:processTags(sorted_tags)
 end
@@ -216,18 +224,30 @@ schema.generate_markdown = function(self: doc_parser): { [string]: string }
 	local result: { [string]: string } = {}
 
 	for class_name, class in self.classes do
+		local methods: { types.method } = {}
 		local properties: { types.property } = {}
+		for i, v in class.methods do
+			table.insert(methods, v)
+		end
 
 		for i, v in class.properties do
 			table.insert(properties, v)
 		end
 
+		table.sort(methods, function(a: types.method, b: types.method): boolean
+			if a.fileNumber == b.fileNumber then return a.declaration.beginLine < b.declaration.beginLine end
+
+			return a.fileNumber < b.fileNumber
+		end)
+
 		table.sort(properties, function(a: types.property, b: types.property): boolean
-			return a.declaration.beginLine < b.declaration.beginLine
+			if a.fileNumber == b.fileNumber then return a.declaration.beginLine < b.declaration.beginLine end
+
+			return a.fileNumber < b.fileNumber
 		end)
 
 		local methods_string = ""
-		for _, method in class.methods do
+		for _, method in ipairs(methods) do
 			local parameters = table.concat(method.params, ",\n\t")
 
 			methods_string ..= templates.method_preset(
