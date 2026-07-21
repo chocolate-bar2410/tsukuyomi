@@ -1,7 +1,7 @@
 --!strict
 local cli_util = require("@self/cli")
 local commands = require("@self/commands")
-cli_util.version = "v0.1.0"
+cli_util.version = "v0.1.1"
 cli_util.name = "tsukuyomi"
 
 cli_util.define_command("build", "Generates markdown files from luau doc comments.", commands.build)
