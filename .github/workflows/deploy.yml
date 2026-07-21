@@ -33,8 +33,9 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
     
-      - name: rokit install tools
-        run: rokit install
+      - name: add rokit to PATH (windows)
+        if: runner.os == 'Windows'
+        run: echo "$env:USERPROFILE\.rokit\bin" >> $env:GITHUB_PATH
 
       - name: compiling binary
         run: lute compile src/init.luau --output ${{matrix.artifact}}
