@@ -4,6 +4,6 @@ sandbox/
 # testing with zensical
 zensical.toml
 .cache
-.github
+.github/workflows/docs.yml
 .venv
 site/
